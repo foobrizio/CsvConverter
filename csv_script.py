@@ -1,0 +1,105 @@
+import sys  # Reading input parameters
+import os  # R/W Filesystem
+import csv  # R/W .csv files
+
+import Util
+from CsvReader import CsvReader
+
+
+# This is a sample Python script.
+
+# Press Maiusc+F10 to execute it or replace it with your code.
+# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+
+def get_path():
+    input_args = sys.argv
+    my_path = input_args[0]
+    while True:
+        if len(input_args) > 2 and input_args[1] == "-p":
+            my_path = input_args[2]
+        else:
+            my_path = input("Insert path: ")
+        correctness = os.path.isdir(my_path)
+        if correctness:
+            break
+    return my_path
+
+
+def load_csv_files(my_path: str):
+    my_csv_files = []
+    for my_file in os.listdir(my_path):
+        if os.path.splitext(my_file)[-1] == ".csv":
+            my_csv_files.append(my_file)
+    if len(my_csv_files) == 0:
+        print("No .csv file was found inside "+my_path)
+        raise Exception()
+    print(f"{len(my_csv_files)} files found")
+    return my_csv_files
+
+
+def reduce(csv_file:str, writer: object):
+    """
+    This method takes a dataset and reduces its rows. The new rows are written in a new file using the writer object
+    :param csv_file:
+    :param writer:
+    :return:
+    """
+    csv_reader = CsvReader()
+    with open(csv_file) as old_dataset:
+        reader = csv.reader(old_dataset)
+        cur_hour = "00"
+        try:
+            for row in reader:
+                row = row[0].split(';')
+                timestamp = row[0]
+                day = timestamp[0:10]
+                hour = timestamp[11:13]
+                if cur_hour != hour:
+                    # Perform the average, update cur_hour and write a new row inside the final dataset
+                    new_data = csv_reader.perform_average()
+                    new_data.insert(0, f"{cur_hour}-{hour}")
+                    new_data.insert(0, day)
+                    cur_hour = hour
+                    writer.writerow(new_data)
+
+                # Collect all the data of the hour
+                csv_reader.collect_row(row)
+        except Exception as e:
+            print(e)
+            # We found a _csv Error
+            print(e.args)
+            if e.args[0] == 'line contains NUL':
+                # We are at the end of the file
+                new_data = csv_reader.perform_average()
+                next_hour = Util.calculate_next_hour(hour)
+                new_data.insert(0, f"{cur_hour}-{next_hour}")
+                new_data.insert(0, day)
+                cur_hour = hour
+                writer.writerow(new_data)
+
+
+
+
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    # Get path containing all the csv files
+    path = get_path()
+
+    # Eventually delete the previously produced result
+    new_file = path + "/final_dataset.csv"
+    if os.path.exists(new_file):
+        os.remove(new_file)
+
+    # List all .csv files
+    files = load_csv_files(path)
+    # Create the new .csv file
+
+    f = open(new_file, 'w')
+    writer = csv.writer(f)
+    for file in files:
+        # For each file of the directory, we'll read the content, reduce it and write a row inside the new file
+        reduce(path+"/"+file, writer)
+    f.close()
+
