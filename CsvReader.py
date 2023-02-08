@@ -31,9 +31,9 @@ class CsvReader:
         self.cont += 1
 
     def perform_average(self):
-        result = [self.wind_speed_sum / self.cont, self.wind_dir_sum / self.cont, self.wind_dir_degrees_sum / self.cont,
-                  self.humidity_sum / self.cont, self.temperature_sum / self.cont, self.noise_sum / self.cont,
-                  self.pm2_5_sum / self.cont, self.pm10_sum / self.cont, self.atm_sum / self.cont,
-                  self.light_sum / self.cont, self.light_hum_sum / self.cont, self.rain_sum / self.cont]
+        result = [round(self.wind_speed_sum / self.cont, 1), round(self.wind_dir_sum / self.cont, 1), round(self.wind_dir_degrees_sum / self.cont, 1),
+                  round(self.humidity_sum / self.cont, 1), round(self.temperature_sum / self.cont, 1), round(self.noise_sum / self.cont, 1),
+                  round(self.pm2_5_sum / self.cont, 1), round(self.pm10_sum / self.cont, 1), round(self.atm_sum / self.cont, 1),
+                  round(self.light_sum / self.cont, 1), round(self.light_hum_sum / self.cont, 1), round(self.rain_sum / self.cont, 1)]
         self.__init__()
         return result

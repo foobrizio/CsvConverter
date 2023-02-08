@@ -1,6 +1,8 @@
+import math
 import sys  # Reading input parameters
 import os  # R/W Filesystem
 import csv  # R/W .csv files
+import pandas #another csv reader
 
 import Util
 from CsvReader import CsvReader
@@ -37,54 +39,59 @@ def load_csv_files(my_path: str):
     return my_csv_files
 
 
-def reduce(csv_file:str, writer: object):
+def reduce(csv_file: str, filewriter: object):
     """
     This method takes a dataset and reduces its rows. The new rows are written in a new file using the writer object
     :param csv_file:
-    :param writer:
+    :param filewriter:
     :return:
     """
     csv_reader = CsvReader()
+
     with open(csv_file) as old_dataset:
-        reader = csv.reader(old_dataset)
+        cont = 0
+        results = pandas.read_csv(old_dataset)
+        # reader = csv.reader(old_dataset)
         cur_hour = "00"
         try:
-            for row in reader:
-                row = row[0].split(';')
+            for i in range(0, len(results)):
+                row = results.values[i][0]
+                if type(row) is float and math.isnan(row):
+                    # We need to skip this row
+                    continue
+                else:
+                    row = row.split(';')
                 timestamp = row[0]
                 day = timestamp[0:10]
                 hour = timestamp[11:13]
                 if cur_hour != hour:
                     # Perform the average, update cur_hour and write a new row inside the final dataset
-                    write_row_with_average(filewriter=writer,
+                    write_row_with_average(filewriter=filewriter,
                                            reader=csv_reader,
                                            cur_hour=cur_hour,
-                                           hour=hour,
                                            day=day)
                     cur_hour = hour
 
                 # Collect all the data of the hour
                 csv_reader.collect_row(row)
         except Exception as e:
-            print(e)
+            print(cont)
             # We found a _csv Error
             print(e.args)
             if e.args[0] == 'line contains NUL':
                 # We are at the end of the file
-                write_row_with_average(filewriter=writer,
+                write_row_with_average(filewriter=filewriter,
                                        reader=csv_reader,
                                        cur_hour=cur_hour,
-                                       hour=hour,
                                        day=day)
 
 
-def write_row_with_average(filewriter: object, reader: CsvReader, cur_hour: str, hour: str, day: str):
+def write_row_with_average(filewriter: object, reader: CsvReader, cur_hour: str, day: str):
     # We are at the end of the file
     new_data = reader.perform_average()
-    next_hour = Util.calculate_next_hour(hour)
+    next_hour = Util.calculate_next_hour(cur_hour)
     new_data.insert(0, f"{cur_hour}-{next_hour}")
     new_data.insert(0, day)
-    cur_hour = hour
     filewriter.writerow(new_data)
 
 
