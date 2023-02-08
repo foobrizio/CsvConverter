@@ -56,11 +56,12 @@ def reduce(csv_file:str, writer: object):
                 hour = timestamp[11:13]
                 if cur_hour != hour:
                     # Perform the average, update cur_hour and write a new row inside the final dataset
-                    new_data = csv_reader.perform_average()
-                    new_data.insert(0, f"{cur_hour}-{hour}")
-                    new_data.insert(0, day)
+                    write_row_with_average(filewriter=writer,
+                                           reader=csv_reader,
+                                           cur_hour=cur_hour,
+                                           hour=hour,
+                                           day=day)
                     cur_hour = hour
-                    writer.writerow(new_data)
 
                 # Collect all the data of the hour
                 csv_reader.collect_row(row)
@@ -70,16 +71,32 @@ def reduce(csv_file:str, writer: object):
             print(e.args)
             if e.args[0] == 'line contains NUL':
                 # We are at the end of the file
-                new_data = csv_reader.perform_average()
-                next_hour = Util.calculate_next_hour(hour)
-                new_data.insert(0, f"{cur_hour}-{next_hour}")
-                new_data.insert(0, day)
-                cur_hour = hour
-                writer.writerow(new_data)
+                write_row_with_average(filewriter=writer,
+                                       reader=csv_reader,
+                                       cur_hour=cur_hour,
+                                       hour=hour,
+                                       day=day)
 
 
+def write_row_with_average(filewriter: object, reader: CsvReader, cur_hour: str, hour: str, day: str):
+    # We are at the end of the file
+    new_data = reader.perform_average()
+    next_hour = Util.calculate_next_hour(hour)
+    new_data.insert(0, f"{cur_hour}-{next_hour}")
+    new_data.insert(0, day)
+    cur_hour = hour
+    filewriter.writerow(new_data)
 
 
+def write_header(filewriter: object):
+    """
+    Write the header inside the new .csv file
+    :param filewriter:
+    :return:
+    """
+    header = ["timestamp", "wind_speed_value", "wind_force", "wind_direction_num", "wind_direction_deg", "humidity",
+              "temperature", "noise", "PM2.5", "PM10", "atm_pressure", "light", "light_hundred", "rainfall"]
+    writer.writerow(header)
 
 
 # Press the green button in the gutter to run the script.
@@ -96,8 +113,9 @@ if __name__ == '__main__':
     files = load_csv_files(path)
     # Create the new .csv file
 
-    f = open(new_file, 'w')
+    f = open(new_file, 'w', newline='')
     writer = csv.writer(f)
+    write_header(writer)
     for file in files:
         # For each file of the directory, we'll read the content, reduce it and write a row inside the new file
         reduce(path+"/"+file, writer)
