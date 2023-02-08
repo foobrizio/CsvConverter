@@ -101,7 +101,7 @@ def write_header(filewriter: object):
     :param filewriter:
     :return:
     """
-    header = ["timestamp", "wind_speed_value", "wind_force", "wind_direction_num", "wind_direction_deg", "humidity",
+    header = ["date", "time_range", "wind_speed_value", "wind_force", "wind_direction_num", "wind_direction_deg", "humidity",
               "temperature", "noise", "PM2.5", "PM10", "atm_pressure", "light", "light_hundred", "rainfall"]
     writer.writerow(header)
 
