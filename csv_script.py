@@ -5,24 +5,39 @@ import csv  # R/W .csv files
 import pandas  # another csv reader
 
 from util.CsvReader import CsvReader
+from util.FinalCsvWriter import FinalCsvWriter
 from util.TimeManager import TimeManager
 
 # Press Maiusc+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 
-def get_path():
+def read_parameters():
     input_args = sys.argv
-    my_path = input_args[0]
+    my_path = "",
+    my_time_setting = 2
+
+    # Let's check if parameters contain path
+    if input_args.__contains__("-p"):
+        my_path_index = input_args.index("-p") + 1
+        if len(input_args) <= my_path_index - 1:
+            my_path = input_args[my_path_index]
     while True:
-        if len(input_args) > 2 and input_args[1] == "-p":
-            my_path = input_args[2]
-        else:
-            my_path = input("Insert path: ")
         correctness = os.path.isdir(my_path)
         if correctness:
             break
-    return my_path
+        my_path = input("Insert path:")
+
+    # Let's check now if parameters contain time_setting
+    if input_args.__contains__("-t"):
+        my_time_index = input_args.index("-t") + 1
+        if len(input_args) <= my_time_index - 1:
+            my_time_setting = input_args[my_time_index]
+
+    if my_time_setting < 0 or my_time_setting > 2:
+        my_time_setting = 2
+
+    return my_path, my_time_setting
 
 
 def load_csv_files(my_path: str):
@@ -37,26 +52,23 @@ def load_csv_files(my_path: str):
     return my_csv_files
 
 
-def reduce(csv_file: str, filewriter: object, time_setting: int):
+def reduce(csv_file: str, time_setting: int):
     """
     This method takes a dataset and reduces its rows. The new rows are written in a new file using the writer object
     :param csv_file:
-    :param filewriter:
     :param time_setting: It specifies the range of time for merging records: 0 for a quarter of hour, 1 for half hour, 2 for an hour
     :return:
     """
     csv_reader = CsvReader()
 
     with open(csv_file) as old_dataset:
-        cont = 0
         results = pandas.read_csv(old_dataset)
         time_manager = TimeManager(time_setting=time_setting)
-        # reader = csv.reader(old_dataset)
         try:
             for i in range(0, len(results)):
                 row = results.values[i][0]
                 if type(row) is float and math.isnan(row):
-                    # We need to skip this row
+                    # We need to skip this row because is bad
                     continue
                 else:
                     row = row.split(';')
@@ -66,51 +78,27 @@ def reduce(csv_file: str, filewriter: object, time_setting: int):
                 minute = timestamp[13:15]
                 if time_manager.time_to_reduce(hour, minute):
                     # Perform the average, update cur_hour and write a new row inside the final dataset
-                    write_row_with_average(filewriter=filewriter,
-                                           reader=csv_reader,
-                                           time_range=time_manager.get_time_range(),
-                                           day=day)
+                    final_writer.write_row_with_average(reader=csv_reader,
+                                                        time_range=time_manager.get_time_range(),
+                                                        day=day)
                     time_manager.update_time_count(hour, minute)
-                    #cur_hour = hour
 
                 # Collect all the data of the hour
                 csv_reader.collect_row(row)
         except Exception as e:
-            print(cont)
             # We found a _csv Error
             print(e.args)
             if e.args[0] == 'line contains NUL':
                 # We are at the end of the file
-                write_row_with_average(filewriter=filewriter,
-                                       reader=csv_reader,
-                                       time_range=time_manager.get_time_range(),
-                                       day=day)
-
-
-def write_row_with_average(filewriter: object, reader: CsvReader, time_range: str, day: str):
-    # We are at the end of the file
-    new_data = reader.perform_average()
-    new_data.insert(0, time_range)
-    new_data.insert(0, day)
-    filewriter.writerow(new_data)
-
-
-def write_header(filewriter: object):
-    """
-    Write the header inside the new .csv file
-    :param filewriter:
-    :return:
-    """
-    header = ["date", "time_range", "wind_speed_value", "wind_force", "wind_direction_num", "wind_direction_deg", "humidity",
-              "temperature", "noise", "PM2.5", "PM10", "atm_pressure", "light", "light_hundred", "rainfall"]
-    writer.writerow(header)
+                final_writer.write_row_with_average(reader=csv_reader,
+                                                    time_range=time_manager.get_time_range(),
+                                                    day=day)
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # Get path containing all the csv files
-    path = get_path()
-    #path, time_setting = read_parameters()
+    path, time_setting = read_parameters()
 
     # Eventually delete the previously produced result
     new_file = path + "/final_dataset.csv"
@@ -122,10 +110,9 @@ if __name__ == '__main__':
     # Create the new .csv file
 
     f = open(new_file, 'w', newline='')
-    writer = csv.writer(f)
-    write_header(writer)
+    final_writer = FinalCsvWriter(csv.writer(f))
+    final_writer.write_header()
     for file in files:
         # For each file of the directory, we'll read the content, reduce it and write a row inside the new file
-        reduce(path+"/"+file, writer, 2)
+        reduce(path+"/"+file, time_setting)
     f.close()
-
