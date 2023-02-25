@@ -21,7 +21,7 @@ def read_parameters():
     # Let's check if parameters contain path
     if input_args.__contains__("-p"):
         my_path_index = input_args.index("-p") + 1
-        if len(input_args) <= my_path_index - 1:
+        if len(input_args) >= my_path_index - 1:
             my_path = input_args[my_path_index]
     while True:
         if len(my_path) > 1:
@@ -33,8 +33,8 @@ def read_parameters():
     # Let's check now if parameters contain time_setting
     if input_args.__contains__("-t"):
         my_time_index = input_args.index("-t") + 1
-        if len(input_args) <= my_time_index - 1:
-            my_time_setting = input_args[my_time_index]
+        if len(input_args) >= my_time_index - 1:
+            my_time_setting = int(input_args[my_time_index])
 
     if my_time_setting < 0 or my_time_setting > 2:
         my_time_setting = 2

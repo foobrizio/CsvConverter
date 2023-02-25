@@ -36,7 +36,12 @@ class TimeManager:
         self.cur_hour = hour
 
     def get_time_range(self) -> str:
-        return f"{self.cur_hour}-{self.calculate_next_hour()}"
+        if self.time_setting == 2:
+            return f"{self.cur_hour}-{self.calculate_next_hour()}"
+        else:
+            starting_point = f"{self.cur_hour}:{self.cur_minute}"
+            ending_point = self.calculate_next_minute()
+            return f"{starting_point}-{ending_point}"
 
     def calculate_next_hour(self) -> str:
         hour_to_int = int(self.cur_hour)
@@ -44,3 +49,19 @@ class TimeManager:
         if new_hour < 10:
             return "0" + str(new_hour)
         return str(new_hour)
+
+    def calculate_next_minute(self) -> str:
+        hour_to_int = int(self.cur_hour)
+        minute_to_int = int(self.cur_minute)
+        new_minute = minute_to_int + 30 if self.time_setting == 1 else minute_to_int + 15
+
+        new_hour = hour_to_int
+        # We have still to consider the case we are at 23:30/23:45 pm
+        if new_minute >= 60:
+            new_hour += 1
+            new_minute = 0
+        if new_hour < 10:
+            new_hour = "0" + str(new_hour)
+        if new_minute < 10:
+            new_minute = "0" + str(new_minute)
+        return f"{new_hour}:{new_minute}"
