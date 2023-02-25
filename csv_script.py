@@ -28,7 +28,7 @@ def read_parameters():
             correctness = os.path.isdir(my_path)
             if correctness:
                 break
-        my_path = input("Insert path:")
+        my_path = input("Insert path:").strip()
 
     # Let's check now if parameters contain time_setting
     if input_args.__contains__("-t"):
@@ -62,7 +62,7 @@ def load_csv_files(my_path: str):
     return total_files
 
 
-def reduce(csv_file: str, time_setting: int):
+def reduce(csv_file: str):
     """
     This method takes a dataset and reduces its rows. The new rows are written in a new file using the writer object
     :param csv_file:
@@ -95,6 +95,9 @@ def reduce(csv_file: str, time_setting: int):
 
                 # Collect all the data of the hour
                 csv_reader.collect_row(row)
+            final_writer.write_row_with_average(reader=csv_reader,
+                                                time_range=time_manager.get_time_range(),
+                                                day=day)
         except Exception as e:
             # We found a _csv Error
             print(e.args)
@@ -130,5 +133,5 @@ if __name__ == '__main__':
     final_writer.write_header()
     for file in files:
         # For each file of the directory, we'll read the content, reduce it and write a row inside the new file
-        reduce(path+"/"+file, time_setting)
+        reduce(path+"/"+file)
     f.close()

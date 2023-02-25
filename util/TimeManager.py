@@ -45,7 +45,7 @@ class TimeManager:
 
     def calculate_next_hour(self) -> str:
         hour_to_int = int(self.cur_hour)
-        new_hour = hour_to_int + 1
+        new_hour = (hour_to_int + 1) % 24
         if new_hour < 10:
             return "0" + str(new_hour)
         return str(new_hour)
@@ -58,7 +58,7 @@ class TimeManager:
         new_hour = hour_to_int
         # We have still to consider the case we are at 23:30/23:45 pm
         if new_minute >= 60:
-            new_hour += 1
+            new_hour = (new_hour + 1) % 24
             new_minute = 0
         if new_hour < 10:
             new_hour = "0" + str(new_hour)
