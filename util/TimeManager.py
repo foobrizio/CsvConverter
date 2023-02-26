@@ -1,8 +1,18 @@
 class TimeManager:
 
-    def __init__(self, time_setting: int):
-        self.cur_hour = "00"
-        self.cur_minute = "00"
+    def __init__(self, time_setting: int, first_timestamp: str):
+        row_hour = first_timestamp[11:13]
+        row_minute = int(first_timestamp[14:16])
+        self.cur_hour = row_hour
+        if time_setting == 2:   # Hourly
+            self.cur_minute = "00"
+        elif time_setting == 1:     # Half hour
+            self.cur_minute = "30" if row_minute >= 30 else "00"
+        else:   # Quarter
+            if row_minute >= 30:
+                self.cur_minute = "45" if int(row_minute) >= 45 else "30"
+            else:
+                self.cur_minute = "15" if row_minute >= 15 else "00"
         self.time_setting = time_setting
 
     def time_to_reduce(self, hour: str, minute: str) -> bool:
